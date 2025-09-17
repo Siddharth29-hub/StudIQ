@@ -1,9 +1,11 @@
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
 from .serializers import SignupSerializer,VerifyOtpSerializer,LoginSerializer,VerifyLoginOtpSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 import random
+from rest_framework.permissions import IsAuthenticated
+
 
 
 
@@ -76,6 +78,15 @@ def verify_login_otp(request):
         return set_tokens_as_cookies(response, user)
     
     return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_profile(request):
+    user = request.user
+    return Response({"username" : user.username,"mobile" : user.mobile,"role" : user.role})
+
+
     
 
 
