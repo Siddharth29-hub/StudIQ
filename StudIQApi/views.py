@@ -20,6 +20,7 @@ def signup(request):
 @api_view(['POST'])
 def verify_otp(request):
     serializer = VerifyOtpSerializer(data = request.data)
+    
     if serializer.is_valid():
         return Response({"Message" :"otp verified successfully, you can now log in"}, status = status.HTTP_200_OK)
     return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
