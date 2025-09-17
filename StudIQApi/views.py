@@ -1,10 +1,13 @@
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 from .serializers import SignupSerializer,VerifyOtpSerializer,LoginSerializer,VerifyLoginOtpSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 import random
-from rest_framework.permissions import IsAuthenticated
+from .serializers import CompleteProfileSerializer
+from .models import CustomUser
+
+
 
 
 
@@ -79,12 +82,32 @@ def verify_login_otp(request):
     
     return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
 
+@api_view(['GET','PUT'])
+def get_complete_profile_view_byid(request, user_id):
+    try:
+        user = CustomUser.objects.get(id = user_id)
+    except CustomUser.DoesNotExist:
+        return Response({"Error" : "User Not found"}, status = status.HTTP_404_NOT_FOUND)
+    
 
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def get_profile(request):
-    user = request.user
-    return Response({"username" : user.username,"mobile" : user.mobile,"role" : user.role})
+    if request.method == "GET":
+        serializer = CompleteProfileSerializer(user)
+        return Response(serializer.data, status = status.HTTP_200_OK)
+    
+    elif request.method == "PUT":
+        serializer = CompleteProfileSerializer(user, data = request.data, partial = True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status = status.HTTP_200_OK)
+        return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
+        
+    
+    
+
+
+
+
+
 
 
     
