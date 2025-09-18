@@ -44,6 +44,16 @@ class CustomUser(models.Model):
         return f"{self.username}-----------{self.role}"
     
 
+class OTPTable(models.Model):
+    user_id = models.IntegerField()
+    mobile = models.CharField(max_length = 15)
+    otp = models.CharField(max_length = 6)
+    created_at = models.DateTimeField(auto_now_add = True)
+
+    def __str__(self):
+        return f"{self.user_id}---------{self.otp}"
+    
+
 
     
 

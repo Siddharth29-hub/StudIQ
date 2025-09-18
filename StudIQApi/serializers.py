@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import CustomUser
+from .models import CustomUser, OTPTable
 import re
 import random
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -25,10 +25,10 @@ class SignupSerializer(serializers.Serializer):
             email = validated_data['email'],
             mobile = validated_data['mobile'],
             role = validated_data['role'],
-            otp = otp
+            
         )
         print("generated otp", otp)
-        return user
+        return user, otp
     
 
 class VerifyOtpSerializer(serializers.Serializer):
@@ -40,15 +40,19 @@ class VerifyOtpSerializer(serializers.Serializer):
         otp = data.get('otp')
 
         try:
-            user = CustomUser.objects.get(mobile = mobile, otp = otp)
+            otp_record = OTPTable.objects.filter(mobile = mobile, otp = otp).last()
+            if not otp_record:
+                raise serializers.ValidationError("Invalid mobile or otp")
+            
+            user = CustomUser.objects.get(mobile = mobile)
+        
+            user.is_verified = True
+            user.save()
+            otp_record.delete()
+        
+            return data
         except CustomUser.DoesNotExist:
-            raise serializers.ValidationError("Invalid mobile or otp")
-        
-        user.is_verified = True
-        user.otp = None
-        user.save()
-        
-        return data
+            raise serializers.ValidationError("User not found")
     
 class LoginSerializer(serializers.Serializer):
     mobile = serializers.CharField(max_length = 15)
@@ -76,18 +80,24 @@ class VerifyLoginOtpSerializer(serializers.Serializer):
         otp = data.get("otp")
 
         try:
-            user = CustomUser.objects.get(mobile = mobile, otp = otp)
-        except CustomUser.DoesNotExist:
-            raise serializers.ValidationError("Invalid Mobile or Otp")
-        
-        if not user.is_verified:
-            raise serializers.ValidationError("User not verified yet")
-        
-        user.otp = None
-        user.save()
+            otp_record = OTPTable.objects.filter(mobile = mobile, otp = otp).last()
+            if not otp_record:
+                raise serializers.ValidationError("Invalid mobile or otp")
+            
+            user = CustomUser.objects.get(mobile = mobile)
 
-        data["user"] = user
-        return data
+            if not user.is_verified:
+                raise serializers.ValidationError("User not verified yet, complete signup first")
+            
+            otp_record.delete()
+            data["user"] = user
+            return data
+
+        except CustomUser.DoesNotExist:
+            raise serializers.ValidationError("User Not found")
+        
+        
+    
     
 class CompleteProfileSerializer(serializers.Serializer):
     id = serializers.IntegerField(read_only = True)
@@ -120,6 +130,13 @@ class CompleteProfileSerializer(serializers.Serializer):
     
     def create(self, validated_data):
         return CustomUser.objects.create(**validated_data)
+    
+
+class OTPSerializer(serializers.Serializer):
+    user_id = serializers.IntegerField()
+    mobile = serializers.CharField(max_length = 15)
+    otp = serializers.CharField(max_length = 6)
+
     
     
 

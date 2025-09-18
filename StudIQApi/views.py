@@ -4,8 +4,9 @@ from rest_framework import status
 from .serializers import SignupSerializer,VerifyOtpSerializer,LoginSerializer,VerifyLoginOtpSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 import random
-from .serializers import CompleteProfileSerializer
+from .serializers import CompleteProfileSerializer,OTPTable
 from .models import CustomUser
+from .models import OTPTable
 
 
 
@@ -18,8 +19,14 @@ from .models import CustomUser
 def signup(request):
     serializer = SignupSerializer(data = request.data)
     if serializer.is_valid():
-        serializer.save()
-        return Response({"message" : "Signup Successfull Otp sent to your mobile"}, status = status.HTTP_201_CREATED)
+        user, otp = serializer.save()
+        OTPTable.objects.create(
+            user_id = user.id,
+            mobile = user.mobile,
+            otp = otp
+
+        )
+        return Response({"message" : "Signup Successfull Otp sent to your mobile", "user_id" : user.id, "mobile" : user.mobile, "otp" : otp}, status = status.HTTP_201_CREATED)
     return Response(serializer.error, status = status.HTTP_400_BAD_REQUEST)
 
 @api_view(['POST'])
@@ -63,8 +70,11 @@ def login(request):
     if serializer.is_valid():
         user = serializer.validated_data["user"]
         otp = str(random.randint(100000,999999))
-        user.otp = otp
-        user.save()
+        OTPTable.objects.create(
+            user_id = user.id,
+            mobile = user.mobile,
+            otp = otp
+        )
 
         print("Login OTP:", otp)
 
