@@ -7,6 +7,11 @@ import random
 from .serializers import CompleteProfileSerializer,OTPTable
 from .models import CustomUser
 from .models import OTPTable
+from .utils import create_jwt_token
+
+
+
+
 
 
 
@@ -82,15 +87,17 @@ def login(request):
     
     return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
 
+
 @api_view(['POST'])
 def verify_login_otp(request):
     serializer = VerifyLoginOtpSerializer(data = request.data)
     if serializer.is_valid():
         user = serializer.validated_data["user"]
-        response = Response({"Message" : "Login Successful"}, status = status.HTTP_200_OK)
-        return set_tokens_as_cookies(response, user)
+        token = create_jwt_token(user)
+
+        return Response({"Message" : "Login Successful", "token" : token}, status = 200)
     
-    return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
+    return Response(serializer.errors, status = 400)
 
 @api_view(['GET','PUT'])
 def get_complete_profile_view_byid(request, user_id):
@@ -98,6 +105,9 @@ def get_complete_profile_view_byid(request, user_id):
         user = CustomUser.objects.get(id = user_id)
     except CustomUser.DoesNotExist:
         return Response({"Error" : "User Not found"}, status = status.HTTP_404_NOT_FOUND)
+    
+    if request.user.id != user.id:
+        return Response({"Error": "You are not allowed to access this profile"}, status=status.HTTP_403_FORBIDDEN)
     
 
     if request.method == "GET":
@@ -110,6 +120,29 @@ def get_complete_profile_view_byid(request, user_id):
             serializer.save()
             return Response(serializer.data, status = status.HTTP_200_OK)
         return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
+    
+@api_view(['GET'])
+def get_profile(request):
+    if not request.user or not hasattr(request.user, "id"):
+        return Response({"error" : "Authentication Required"}, status = 401)
+    
+    user = request.user
+    return Response({
+        "id" : user.id,
+        "username" : user.username,
+        "mobile" : user.mobile,
+        "email" : user.email,
+        "role" : user.role
+
+    }, status = 200)
+
+
+
+    
+    
+     
+
+
         
     
     
