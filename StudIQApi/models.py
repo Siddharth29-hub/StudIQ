@@ -26,10 +26,8 @@ class CustomUser(models.Model):
     dob = models.DateField(blank = True, null = True)
     father_name = models.CharField(max_length = 100,unique = True, blank = True, null = True)
     adhaar_no = models.CharField(max_length = 12, blank = True, null = True)
-    from_state = models.CharField(max_length = 100,blank = True, null = True)
-    from_city = models.CharField(max_length = 100, blank = True, null = True)
-    to_state = models.CharField(max_length = 100, blank = True, null = True)
-    to_city = models.CharField(max_length = 100, blank = True, null = True)
+    state = models.CharField(max_length = 100,blank = True, null = True)
+    city = models.CharField(max_length = 100, blank = True, null = True)
     permanent_address = models.TextField(blank = True, null = True)
     pincode = models.CharField(max_length = 10, blank = True, null = True)
     current_address = models.TextField(blank = True, null = True)
@@ -53,7 +51,7 @@ class OTPTable(models.Model):
     otp = models.CharField(max_length = 6)
     created_at = models.DateTimeField(auto_now_add = True)
     expired_at = models.DateTimeField(default = timezone.now() + timedelta(minutes = 5))
-    
+
 
 
     def __str__(self):

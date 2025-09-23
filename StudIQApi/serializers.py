@@ -109,10 +109,9 @@ class CompleteProfileSerializer(serializers.Serializer):
     age = serializers.IntegerField(required = False, allow_null = True)
     dob = serializers.DateField(required = False, allow_null = True)
     father_name = serializers.CharField(max_length = 100, required = False, allow_blank = True)
-    from_state = serializers.CharField(max_length = 100, required = False, allow_blank = True)
-    from_city = serializers.CharField(max_length = 100, required = False, allow_blank = True)
-    to_state = serializers.CharField(max_length = 100, required = False, allow_blank = True)
-    to_city = serializers.CharField(max_length = 100, required = False, allow_blank = True)
+    adhaar_no = serializers.CharField(max_length = 12, required = False, allow_blank = True)
+    state = serializers.CharField(max_length = 100, required = False, allow_blank = True)
+    city = serializers.CharField(max_length = 100, required = False, allow_blank = True)
     permanent_address = serializers.CharField(required = False, allow_blank = True)
     pincode = serializers.CharField(max_length = 10, required = False, allow_blank = True)
     current_address = serializers.CharField(required = False, allow_blank = True)
@@ -132,11 +131,6 @@ class CompleteProfileSerializer(serializers.Serializer):
         return CustomUser.objects.create(**validated_data)
     
 
-class OTPSerializer(serializers.Serializer):
-    user_id = serializers.IntegerField()
-    mobile = serializers.CharField(max_length = 15)
-    otp = serializers.CharField(max_length = 6)
-
 
 class UserListSerializer(serializers.Serializer):
     id = serializers.IntegerField(read_only = True)
@@ -146,11 +140,9 @@ class UserListSerializer(serializers.Serializer):
     role = serializers.CharField(max_length = 20)
     is_verified = serializers.BooleanField()
     age = serializers.IntegerField(required = False, allow_null =True)
-    from_state = serializers.CharField(max_length = 100, required = False, allow_blank = True)
-    from_city = serializers.CharField(max_length = 100, required = False, allow_blank = True)
-    to_state = serializers.CharField(max_length = 100, required = False, allow_blank = True)
-    to_city = serializers.CharField(max_length = 100, required = False, allow_blank = True)
-
+    state = serializers.CharField(max_length = 100, required = False, allow_blank = True)
+    city = serializers.CharField(max_length = 100, required = False, allow_blank = True)
+    
     def create(self, validated_data):
         return CustomUser.objects.create(**validated_data)
     
@@ -163,10 +155,8 @@ class UserListSerializer(serializers.Serializer):
         instance.role = validated_data.get("role", instance.role)
         instance.is_verified = validated_data.get("is_verified", instance.is_verified)
         instance.age = validated_data.get("age", instance.age)
-        instance.from_state = validated_data.get("from_state", instance.from_state)
-        instance.from_city = validated_data.get("from_city", instance.from_city)
-        instance.to_state = validated_data.get("to_state", instance.to_state)
-        instance.to_city = validated_data.get("to_city", instance.to_city)
+        instance.state = validated_data.get("from_state", instance.from_state)
+        instance.city = validated_data.get("from_city", instance.from_city)
         instance.save()
         return instance
 
@@ -189,10 +179,8 @@ class CurrentUserSerializer(serializers.Serializer):
     dob = serializers.DateField(required=False, allow_null=True)
     father_name = serializers.CharField(max_length=100, required=False, allow_blank=True)
 
-    from_state = serializers.CharField(max_length=100, required=False, allow_blank=True)
-    from_city = serializers.CharField(max_length=100, required=False, allow_blank=True)
-    to_state = serializers.CharField(max_length=100, required=False, allow_blank=True)
-    to_city = serializers.CharField(max_length=100, required=False, allow_blank=True)
+    state = serializers.CharField(max_length=100, required=False, allow_blank=True)
+    city = serializers.CharField(max_length=100, required=False, allow_blank=True)
 
     permanent_address = serializers.CharField(max_length=255, required=False, allow_blank=True)
     pincode = serializers.CharField(max_length=10, required=False, allow_blank=True)
@@ -225,11 +213,9 @@ class CurrentUserSerializer(serializers.Serializer):
         instance.dob = validated_data.get('dob', instance.dob)
         instance.father_name = validated_data.get('father_name', instance.father_name)
 
-        instance.from_state = validated_data.get('from_state', instance.from_state)
-        instance.from_city = validated_data.get('from_city', instance.from_city)
-        instance.to_state = validated_data.get('to_state', instance.to_state)
-        instance.to_city = validated_data.get('to_city', instance.to_city)
-
+        instance.state = validated_data.get('from_state', instance.from_state)
+        instance.city = validated_data.get('from_city', instance.from_city)
+        
         instance.permanent_address = validated_data.get('permanent_address', instance.permanent_address)
         instance.pincode = validated_data.get('pincode', instance.pincode)
         instance.current_address = validated_data.get('current_address', instance.current_address)

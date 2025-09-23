@@ -105,24 +105,40 @@ def verify_login_otp(request):
     return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
 
 
-@api_view(['PUT'])
+@api_view(['GET', 'PUT'])
 @RoleBasedAuthorizationMiddleware.require_authentication
 def complete_profile(request):
     """
-    API to complete/update the profile of the logged-in user only.
+    API for logged-in user to view or update (complete) their own profile
+    - GET: Retrieve own profile
+    - PUT: Update own profile (from access token)
     """
+    user = getattr(request, 'user', None)
 
-    user = getattr(request, "user", None)
-    if not user or not getattr(user, "is_authenticated", False):
-        return Response({"error" : "please login first"}, status = status.HTTP_401_UNAUTHORIZED)
-    
-    serializer = CurrentUserSerializer(user, data = request.data, partial = True)
-    if serializer.is_valid():
-        serializer.save()
-        return Response({"Message" : "Profile completed Successfully", "user" : serializer.data}, status = status.HTTP_200_OK)
-    return Response({"error" : "validation Failed", "details" : serializer.errors}, status = status.HTTP_400_BAD_REQUEST)
- 
-        
+    if not user or not getattr(user, 'is_authenticated', False):
+        return Response(
+            {"error": "Authentication required"},
+            status=status.HTTP_401_UNAUTHORIZED
+        )
+
+    if request.method == "GET":
+        serializer = CompleteProfileSerializer(user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    elif request.method == "PUT":
+        serializer = CompleteProfileSerializer(user, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
+                {
+                    "message": "Profile updated successfully",
+                    "profile": serializer.data
+                },
+                status=status.HTTP_200_OK
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+                
 @api_view(['GET'])
 @RoleBasedAuthorizationMiddleware.require_authentication
 def get_all_users(request):
