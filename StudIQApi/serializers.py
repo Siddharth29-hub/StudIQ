@@ -19,7 +19,7 @@ class SignupSerializer(serializers.Serializer):
         return value
     
     def create(self,validated_data):
-        otp = str(random.randint(100000,999999))
+        otp = "123456"
         user = CustomUser.objects.create(
             username = validated_data['username'],
             email = validated_data['email'],
@@ -137,7 +137,113 @@ class OTPSerializer(serializers.Serializer):
     mobile = serializers.CharField(max_length = 15)
     otp = serializers.CharField(max_length = 6)
 
+
+class UserListSerializer(serializers.Serializer):
+    id = serializers.IntegerField(read_only = True)
+    username = serializers.CharField(max_length = 100)
+    email = serializers.EmailField()
+    mobile = serializers.CharField(max_length = 15)
+    role = serializers.CharField(max_length = 20)
+    is_verified = serializers.BooleanField()
+    age = serializers.IntegerField(required = False, allow_null =True)
+    from_state = serializers.CharField(max_length = 100, required = False, allow_blank = True)
+    from_city = serializers.CharField(max_length = 100, required = False, allow_blank = True)
+    to_state = serializers.CharField(max_length = 100, required = False, allow_blank = True)
+    to_city = serializers.CharField(max_length = 100, required = False, allow_blank = True)
+
+    def create(self, validated_data):
+        return CustomUser.objects.create(**validated_data)
     
+    def update(self, instance, validated_data):
+        # updating an existing CustomUser Object
+
+        instance.username = validated_data.get("username", instance.username)
+        instance.email = validated_data.get("email", instance.email)
+        instance.mobile = validated_data.get("mobile", instance.mobile)
+        instance.role = validated_data.get("role", instance.role)
+        instance.is_verified = validated_data.get("is_verified", instance.is_verified)
+        instance.age = validated_data.get("age", instance.age)
+        instance.from_state = validated_data.get("from_state", instance.from_state)
+        instance.from_city = validated_data.get("from_city", instance.from_city)
+        instance.to_state = validated_data.get("to_state", instance.to_state)
+        instance.to_city = validated_data.get("to_city", instance.to_city)
+        instance.save()
+        return instance
+
+
+
+
+class CurrentUserSerializer(serializers.Serializer):
+    """
+    Manual serializer for current user's complete information
+    """
+
+    id = serializers.IntegerField(read_only=True)
+    username = serializers.CharField(max_length=100)
+    email = serializers.EmailField()
+    mobile = serializers.CharField(max_length=15)
+    role = serializers.CharField(max_length=20)
+    is_verified = serializers.BooleanField()
+
+    age = serializers.IntegerField(required=False, allow_null=True)
+    dob = serializers.DateField(required=False, allow_null=True)
+    father_name = serializers.CharField(max_length=100, required=False, allow_blank=True)
+
+    from_state = serializers.CharField(max_length=100, required=False, allow_blank=True)
+    from_city = serializers.CharField(max_length=100, required=False, allow_blank=True)
+    to_state = serializers.CharField(max_length=100, required=False, allow_blank=True)
+    to_city = serializers.CharField(max_length=100, required=False, allow_blank=True)
+
+    permanent_address = serializers.CharField(max_length=255, required=False, allow_blank=True)
+    pincode = serializers.CharField(max_length=10, required=False, allow_blank=True)
+    current_address = serializers.CharField(max_length=255, required=False, allow_blank=True)
+
+    hobbies = serializers.CharField(max_length=255, required=False, allow_blank=True)
+    bio = serializers.CharField(max_length=500, required=False, allow_blank=True)
+    interests = serializers.CharField(max_length=255, required=False, allow_blank=True)
+    skills = serializers.CharField(max_length=255, required=False, allow_blank=True)
+
+    profile_photo = serializers.ImageField(required=False, allow_null=True)
+
+    def create(self, validated_data):
+        """
+        Create a new CustomUser object from validated data
+        """
+        return CustomUser.objects.create(**validated_data)
+
+    def update(self, instance, validated_data):
+        """
+        Update an existing CustomUser object with validated data
+        """
+        instance.username = validated_data.get('username', instance.username)
+        instance.email = validated_data.get('email', instance.email)
+        instance.mobile = validated_data.get('mobile', instance.mobile)
+        instance.role = validated_data.get('role', instance.role)
+        instance.is_verified = validated_data.get('is_verified', instance.is_verified)
+
+        instance.age = validated_data.get('age', instance.age)
+        instance.dob = validated_data.get('dob', instance.dob)
+        instance.father_name = validated_data.get('father_name', instance.father_name)
+
+        instance.from_state = validated_data.get('from_state', instance.from_state)
+        instance.from_city = validated_data.get('from_city', instance.from_city)
+        instance.to_state = validated_data.get('to_state', instance.to_state)
+        instance.to_city = validated_data.get('to_city', instance.to_city)
+
+        instance.permanent_address = validated_data.get('permanent_address', instance.permanent_address)
+        instance.pincode = validated_data.get('pincode', instance.pincode)
+        instance.current_address = validated_data.get('current_address', instance.current_address)
+
+        instance.hobbies = validated_data.get('hobbies', instance.hobbies)
+        instance.bio = validated_data.get('bio', instance.bio)
+        instance.interests = validated_data.get('interests', instance.interests)
+        instance.skills = validated_data.get('skills', instance.skills)
+
+        instance.profile_photo = validated_data.get('profile_photo', instance.profile_photo)
+
+        instance.save()
+        return instance
+
     
 
     

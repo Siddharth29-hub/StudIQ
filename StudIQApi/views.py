@@ -1,26 +1,22 @@
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.permissions import AllowAny
 from .serializers import SignupSerializer,VerifyOtpSerializer,LoginSerializer,VerifyLoginOtpSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 import random
-from .serializers import CompleteProfileSerializer,OTPTable
+from .serializers import CompleteProfileSerializer,OTPTable, UserListSerializer, CurrentUserSerializer
 from .models import CustomUser
 from .models import OTPTable
-from .utils import create_jwt_token
-
-
-
-
-
-
-
-
-
+from .middleware import RoleBasedAuthorizationMiddleware
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 
 # Create your views here.
 
 @api_view(['POST'])
+@permission_classes([AllowAny])
+@csrf_exempt
 def signup(request):
     serializer = SignupSerializer(data = request.data)
     if serializer.is_valid():
@@ -32,9 +28,12 @@ def signup(request):
 
         )
         return Response({"message" : "Signup Successfull Otp sent to your mobile", "user_id" : user.id, "mobile" : user.mobile, "otp" : otp}, status = status.HTTP_201_CREATED)
-    return Response(serializer.error, status = status.HTTP_400_BAD_REQUEST)
+    return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
 
 @api_view(['POST'])
+@permission_classes([AllowAny])
+@csrf_exempt
+
 def verify_otp(request):
     serializer = VerifyOtpSerializer(data = request.data)
     
@@ -44,7 +43,10 @@ def verify_otp(request):
 
 
 def set_tokens_as_cookies(response, user):
-    refresh = RefreshToken.for_user(user)
+    refresh = RefreshToken()
+    refresh['user_id'] = user.id
+    refresh['username'] = user.username
+    refresh['role'] = user.role
     access_token = str(refresh.access_token)
     refresh_token = str(refresh)
 
@@ -70,11 +72,13 @@ def set_tokens_as_cookies(response, user):
 
 
 @api_view(['POST'])
+@permission_classes([AllowAny])
+@csrf_exempt
 def login(request):
     serializer = LoginSerializer(data = request.data)
     if serializer.is_valid():
         user = serializer.validated_data["user"]
-        otp = str(random.randint(100000,999999))
+        otp = 123456
         OTPTable.objects.create(
             user_id = user.id,
             mobile = user.mobile,
@@ -89,82 +93,93 @@ def login(request):
 
 
 @api_view(['POST'])
+@permission_classes([AllowAny])
+@csrf_exempt
 def verify_login_otp(request):
     serializer = VerifyLoginOtpSerializer(data = request.data)
     if serializer.is_valid():
         user = serializer.validated_data["user"]
-        token = create_jwt_token(user)
-
-        return Response({"Message" : "Login Successful", "token" : token}, status = 200)
+        response = Response({"Message" : "Login Successful"}, status = status.HTTP_200_OK)
+        return set_tokens_as_cookies(response, user)
     
-    return Response(serializer.errors, status = 400)
+    return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
 
-@api_view(['GET','PUT'])
-def get_complete_profile_view_byid(request, user_id):
-    try:
-        user = CustomUser.objects.get(id = user_id)
-    except CustomUser.DoesNotExist:
-        return Response({"Error" : "User Not found"}, status = status.HTTP_404_NOT_FOUND)
+
+@api_view(['PUT'])
+@RoleBasedAuthorizationMiddleware.require_authentication
+def complete_profile(request):
+    """
+    API to complete/update the profile of the logged-in user only.
+    """
+
+    user = getattr(request, "user", None)
+    if not user or not getattr(user, "is_authenticated", False):
+        return Response({"error" : "please login first"}, status = status.HTTP_401_UNAUTHORIZED)
     
-    if request.user.id != user.id:
-        return Response({"Error": "You are not allowed to access this profile"}, status=status.HTTP_403_FORBIDDEN)
-    
-
-    if request.method == "GET":
-        serializer = CompleteProfileSerializer(user)
-        return Response(serializer.data, status = status.HTTP_200_OK)
-    
-    elif request.method == "PUT":
-        serializer = CompleteProfileSerializer(user, data = request.data, partial = True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status = status.HTTP_200_OK)
-        return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
-    
-@api_view(['GET'])
-def get_profile(request):
-    if not request.user or not hasattr(request.user, "id"):
-        return Response({"error" : "Authentication Required"}, status = 401)
-    
-    user = request.user
-    return Response({
-        "id" : user.id,
-        "username" : user.username,
-        "mobile" : user.mobile,
-        "email" : user.email,
-        "role" : user.role
-
-    }, status = 200)
-
-
-
-    
-    
-     
-
-
+    serializer = CurrentUserSerializer(user, data = request.data, partial = True)
+    if serializer.is_valid():
+        serializer.save()
+        return Response({"Message" : "Profile completed Successfully", "user" : serializer.data}, status = status.HTTP_200_OK)
+    return Response({"error" : "validation Failed", "details" : serializer.errors}, status = status.HTTP_400_BAD_REQUEST)
+ 
         
+@api_view(['GET'])
+@RoleBasedAuthorizationMiddleware.require_authentication
+def get_all_users(request):
+
+    # API to get all users based on role permissions:
+    # - Admin: Can see all users
+    # - Agent: Can see only users and owners
+    # - Others: Access denied
+
+    user = getattr(request, "user", None)
+    if not user or not getattr(user, "is_authenticated", False):
+        return Response({"error" : "Authentication Required"}, status = status.HTTP_401_UNAUTHORIZED)
     
+    role = getattr(user, "role", None)
+    if role == "admin":
+        users = CustomUser.objects.all()
+    elif role == "agent":
+        users = CustomUser.objects.filter(role__in= ["user", "owner"])
+    else:
+        return Response({"error" : "You do not have permission to access this Resource"}, status = status.HTTP_403_FORBIDDEN)
     
+    serializer = UserListSerializer(users, many = True)
+    return Response({"message" : "Users Retrieved Successfully", "users" : serializer.data, "total_count" : users.count()}, status = status.HTTP_200_OK)
 
+@api_view(["GET"])
+@RoleBasedAuthorizationMiddleware.require_authentication
+def get_current_user(request):
+    #  API to get current user's complete information from request.user
 
+    user = getattr(request, "user", None)
+    if not user or not getattr(user, "is_authenticated", False):
+        return Response({"error" : "Authentication Required"}, status = status.HTTP_401_UNAUTHORIZED)
+    serializer = CurrentUserSerializer(user)
+    return Response({"message" : "Current User Serializer Retrieved Successfully", "user" : serializer.data}, status = status.HTTP_200_OK)
 
+@api_view(['PUT'])
+@RoleBasedAuthorizationMiddleware.require_authentication
+def update_current_user(request):
+    # API to update current user's information
 
-
-
-
+    user = getattr(request, "user", None)
+    if not user or not getattr(user, "is_authenticated", False):
+        return Response({"error" : "Authentication Required"}, status = status.HTTP_401_UNAUTHORIZED)
+    serializer = CurrentUserSerializer(user, data = request.data, partial = True)
     
+    if serializer.is_valid():
+        serializer.save()
+        return Response({"message" : "User profile updated Successfully", "user": serializer.data}, status = status.HTTP_200_OK)
+    return Response({"error" : "validation failed","details" : serializer.errors}, status = status.HTTP_400_BAD_REQUEST)
 
+@api_view(['POST'])
+@permission_classes([AllowAny])
+@csrf_exempt
+def logout(request):
+    #  API to logout user by clearing cookies
+    response = Response({"message" : "logged out successfully"}, status = status.HTTP_200_OK)
 
-    
-
-
-
-
-
-
-
-
-
-
-    
+    response.delete_cookie("access")
+    response.delete_cookie("refresh")
+    return response

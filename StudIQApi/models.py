@@ -1,4 +1,6 @@
 from django.db import models
+from django.utils import timezone
+from datetime import timedelta
 
 # Create your models here.
 
@@ -22,7 +24,8 @@ class CustomUser(models.Model):
 
     age = models.IntegerField(blank = True, null = True)
     dob = models.DateField(blank = True, null = True)
-    father_name = models.CharField(max_length = 100,blank = True, null = True)
+    father_name = models.CharField(max_length = 100,unique = True, blank = True, null = True)
+    adhaar_no = models.CharField(max_length = 12, blank = True, null = True)
     from_state = models.CharField(max_length = 100,blank = True, null = True)
     from_city = models.CharField(max_length = 100, blank = True, null = True)
     to_state = models.CharField(max_length = 100, blank = True, null = True)
@@ -49,6 +52,9 @@ class OTPTable(models.Model):
     mobile = models.CharField(max_length = 15)
     otp = models.CharField(max_length = 6)
     created_at = models.DateTimeField(auto_now_add = True)
+    expired_at = models.DateTimeField(default = timezone.now() + timedelta(minutes = 5))
+    
+
 
     def __str__(self):
         return f"{self.user_id}---------{self.otp}"
