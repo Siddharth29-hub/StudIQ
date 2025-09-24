@@ -1,8 +1,9 @@
 from rest_framework import serializers
-from .models import CustomUser, OTPTable
+from .models import CustomUser, OTPTable, Service, Feature
 import re
 import random
 from rest_framework_simplejwt.tokens import RefreshToken
+# from .models import Feature, Service
 
 
 class SignupSerializer(serializers.Serializer):
@@ -155,8 +156,8 @@ class UserListSerializer(serializers.Serializer):
         instance.role = validated_data.get("role", instance.role)
         instance.is_verified = validated_data.get("is_verified", instance.is_verified)
         instance.age = validated_data.get("age", instance.age)
-        instance.state = validated_data.get("from_state", instance.from_state)
-        instance.city = validated_data.get("from_city", instance.from_city)
+        instance.state = validated_data.get("state", instance.state)
+        instance.city = validated_data.get("city", instance.city)
         instance.save()
         return instance
 
@@ -213,8 +214,8 @@ class CurrentUserSerializer(serializers.Serializer):
         instance.dob = validated_data.get('dob', instance.dob)
         instance.father_name = validated_data.get('father_name', instance.father_name)
 
-        instance.state = validated_data.get('from_state', instance.from_state)
-        instance.city = validated_data.get('from_city', instance.from_city)
+        instance.state = validated_data.get('state', instance.state)
+        instance.city = validated_data.get('city', instance.city)
         
         instance.permanent_address = validated_data.get('permanent_address', instance.permanent_address)
         instance.pincode = validated_data.get('pincode', instance.pincode)
@@ -229,6 +230,60 @@ class CurrentUserSerializer(serializers.Serializer):
 
         instance.save()
         return instance
+    
+
+# --------- Feature Serializer ---------
+class FeatureSerializer(serializers.Serializer):
+    id = serializers.IntegerField(read_only=True)
+    service_id = serializers.IntegerField()   # we accept service_id manually
+    feature_title = serializers.CharField(max_length=200)
+    feature_icon = serializers.CharField(max_length=50, required=False, allow_blank=True)
+    feature_description = serializers.CharField(required=False, allow_blank=True)
+
+    def create(self, validated_data):
+        return Feature.objects.create(
+            service_id=validated_data["service_id"],
+            feature_title=validated_data["feature_title"],
+            feature_icon=validated_data.get("feature_icon", ""),
+            feature_description=validated_data.get("feature_description", "")
+        )
+
+    def update(self, instance, validated_data):
+        instance.service_id = validated_data.get("service_id", instance.service_id)
+        instance.feature_title = validated_data.get("feature_title", instance.feature_title)
+        instance.feature_icon = validated_data.get("feature_icon", instance.feature_icon)
+        instance.feature_description = validated_data.get("feature_description", instance.feature_description)
+        instance.save()
+        return instance
+
+
+# --------- Service Serializer ---------
+class ServiceSerializer(serializers.Serializer):
+    id = serializers.IntegerField(read_only=True)
+    service_name = serializers.CharField(max_length=100)
+    service_description = serializers.CharField(required=False, allow_blank=True)
+
+    def create(self, validated_data):
+        return Service.objects.create(**validated_data)
+
+    def update(self, instance, validated_data):
+        instance.service_name = validated_data.get("service_name", instance.service_name)
+        instance.service_description = validated_data.get("service_description", instance.service_description)
+        instance.save()
+        return instance
+
+
+# --------- Service Detail Serializer (with features) ---------
+class ServiceDetailSerializer(ServiceSerializer):
+    features = serializers.SerializerMethodField()
+
+    def get_features(self, obj):
+        features = Feature.objects.filter(service=obj)
+        return FeatureSerializer(features, many=True).data
+
+
+
+
 
     
 
