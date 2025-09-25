@@ -5,8 +5,8 @@ from rest_framework.permissions import AllowAny
 from .serializers import SignupSerializer,VerifyOtpSerializer,LoginSerializer,VerifyLoginOtpSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 import random
-from .serializers import CompleteProfileSerializer,OTPTable, UserListSerializer, CurrentUserSerializer, ServiceSerializer, ServiceDetailSerializer, FeatureSerializer
-from .models import CustomUser, OTPTable, Service, Feature
+from .serializers import CompleteProfileSerializer,OTPTable, UserListSerializer, CurrentUserSerializer, ServiceSerializer
+from .models import CustomUser, OTPTable, Service
 from .middleware import RoleBasedAuthorizationMiddleware
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -200,83 +200,19 @@ def logout(request):
     response.delete_cookie("refresh")
     return response
 
+@api_view(['POST'])
+def create_service(request):
+    serializer = ServiceSerializer(data = request.data)
+    if serializer.is_valid():
+        service = serializer.create(serializer.validated_data)
+        response_serializer = ServiceSerializer(service)
+        return Response({"message" : "Service Created Successfully","data" : response_serializer.data}, status = status.HTTP_201_CREATED)
+    return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
 
-# ---------- Service APIs ----------
-@api_view(['GET', 'POST'])
-def service_list_create(request):
-    if request.method == 'GET':
-        services = Service.objects.all()
-        serializer = ServiceSerializer(services, many=True)
-        return Response(serializer.data)
-
-    elif request.method == 'POST':
-        serializer = ServiceSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
 
 
-@api_view(['GET', 'PUT', 'DELETE'])
-def service_detail(request, pk):
-    try:
-        service = Service.objects.get(pk=pk)
-    except Service.DoesNotExist:
-        return Response({"error": "Service not found"}, status=status.HTTP_404_NOT_FOUND)
 
-    if request.method == 'GET':
-        serializer = ServiceDetailSerializer(service)
-        return Response(serializer.data)
-
-    elif request.method == 'PUT':
-        serializer = ServiceSerializer(service, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    elif request.method == 'DELETE':
-        service.delete()
-        return Response({"message": "Service deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
-
-
-# ---------- Feature APIs ----------
-@api_view(['GET', 'POST'])
-def feature_list_create(request):
-    if request.method == 'GET':
-        features = Feature.objects.all()
-        serializer = FeatureSerializer(features, many=True)
-        return Response(serializer.data)
-
-    elif request.method == 'POST':
-        serializer = FeatureSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-@api_view(['GET', 'PUT', 'DELETE'])
-def feature_detail(request, pk):
-    try:
-        feature = Feature.objects.get(pk=pk)
-    except Feature.DoesNotExist:
-        return Response({"error": "Feature not found"}, status=status.HTTP_404_NOT_FOUND)
-
-    if request.method == 'GET':
-        serializer = FeatureSerializer(feature)
-        return Response(serializer.data)
-
-    elif request.method == 'PUT':
-        serializer = FeatureSerializer(feature, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    elif request.method == 'DELETE':
-        feature.delete()
-        return Response({"message": "Feature deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
 
 
 

@@ -2,7 +2,8 @@ from django.urls import path
 from .views import signup
 from .views import (
     verify_otp,login, verify_login_otp, complete_profile,
-    get_all_users,get_current_user,update_current_user,logout, service_list_create, service_detail, feature_list_create, feature_detail
+    get_all_users,get_current_user,update_current_user,logout, 
+    create_service
 )
 
 urlpatterns = [
@@ -15,10 +16,7 @@ urlpatterns = [
     path("get_current_user/", get_current_user, name = "get_current_user"),
     path("update_current_user/", update_current_user, name = "update_current_user"),
     path("logout/", logout, name = "logout"),
-    path("service_list_create/", service_list_create, name = "service_list_create"),
-    path("service_detail/<int:pk>/", service_detail, name = "service_detail"),
-    path("feature_list_create/", feature_list_create, name = "feature_list_create"),
-    path("feature_detail/<int:pk>/", feature_detail, name = "feature_detail")
-
+    path("create_service/", create_service, name = "create_service")
+    
 
 ]
