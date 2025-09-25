@@ -236,22 +236,16 @@ def delete_feature(request, feature_id):
     except Feature.DoesNotExist:
         return Response({"error" : "Feature Not Found"}, status = status.HTTP_404_NOT_FOUND)
     
-
+@api_view(["PUT"])
+def update_feature(request, feature_id):
+    try:
+        feature = Feature.objects.get(pk = feature_id)
+    except Feature.DoesNotExist:
+        return Response({"error" : "feature not found"}, status = status.HTTP_404_NOT_FOUND)
     
-
-
-
-    
-
-
-    
-
-
-
-
-
-
-
-    
-    
-                         
+    serializer = FeatureSerializer(feature, data = request.data, partial = True)
+    if serializer.is_valid():
+        updated_feature = serializer.update(feature, serializer.validated_data)
+        response_serializer = FeatureSerializer(updated_feature)
+        return Response({"message" : "Feature Updated Successfully", "data" : response_serializer.data}, status = status.HTTP_200_OK)
+    return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
