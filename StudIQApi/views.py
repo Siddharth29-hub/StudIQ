@@ -209,6 +209,17 @@ def create_service(request):
         return Response({"message" : "Service Created Successfully","data" : response_serializer.data}, status = status.HTTP_201_CREATED)
     return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
 
+@api_view(["DELETE"])
+def delete_service(request, service_id):
+    try:
+        service = Service.objects.get(pk = service_id)
+        service.delete()
+        return Response({"message" : "service deleted successfully"}, status = status.HTTP_200_OK)
+    except Service.DoesNotExist:
+        return Response({"error" : "service not found"}, status = status.HTTP_404_NOT_FOUND)
+    
+    
+
     
 
 
