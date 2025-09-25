@@ -6,7 +6,7 @@ from .serializers import SignupSerializer,VerifyOtpSerializer,LoginSerializer,Ve
 from rest_framework_simplejwt.tokens import RefreshToken
 import random
 from .serializers import CompleteProfileSerializer,OTPTable, UserListSerializer, CurrentUserSerializer, ServiceSerializer, FeatureSerializer
-from .models import CustomUser, OTPTable, Service
+from .models import CustomUser, OTPTable, Service, Feature
 from .middleware import RoleBasedAuthorizationMiddleware
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -226,6 +226,19 @@ def add_feature(request):
         response_serializer = FeatureSerializer(feature)
         return Response({"message" : "Feature added Successfully", "data" : response_serializer.data}, status = status.HTTP_201_CREATED)
     return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
+
+@api_view(["DELETE"])
+def delete_feature(request, feature_id):
+    try:
+        feature = Feature.objects.get(pk = feature_id)
+        feature.delete()
+        return Response({"message" : "feature deleted Successfully"}, status = status.HTTP_200_OK)
+    except Feature.DoesNotExist:
+        return Response({"error" : "Feature Not Found"}, status = status.HTTP_404_NOT_FOUND)
+    
+
+    
+
 
 
     

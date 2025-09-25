@@ -3,7 +3,7 @@ from .views import signup
 from .views import (
     verify_otp,login, verify_login_otp, complete_profile,
     get_all_users,get_current_user,update_current_user,logout, 
-    create_service, delete_service, add_feature
+    create_service, delete_service, add_feature, delete_feature
 )
 
 urlpatterns = [
@@ -18,7 +18,8 @@ urlpatterns = [
     path("logout/", logout, name = "logout"),
     path("create_service/", create_service, name = "create_service"),
     path("delete_service/<int:service_id>/", delete_service, name = "delete_service"),
-    path("add_feature/", add_feature, name = "add_feature")
+    path("add_feature/", add_feature, name = "add_feature"),
+    path("delete_feature/<int:feature_id>/", delete_feature, name = "delete_feature")
     
 
 ]
