@@ -5,7 +5,7 @@ from rest_framework.permissions import AllowAny
 from .serializers import SignupSerializer,VerifyOtpSerializer,LoginSerializer,VerifyLoginOtpSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 import random
-from .serializers import CompleteProfileSerializer,OTPTable, UserListSerializer, CurrentUserSerializer, ServiceSerializer
+from .serializers import CompleteProfileSerializer,OTPTable, UserListSerializer, CurrentUserSerializer, ServiceSerializer, FeatureSerializer
 from .models import CustomUser, OTPTable, Service
 from .middleware import RoleBasedAuthorizationMiddleware
 from django.http import JsonResponse
@@ -218,7 +218,18 @@ def delete_service(request, service_id):
     except Service.DoesNotExist:
         return Response({"error" : "service not found"}, status = status.HTTP_404_NOT_FOUND)
     
+@api_view(["POST"])
+def add_feature(request):
+    serializer = FeatureSerializer(data = request.data)
+    if serializer.is_valid():
+        feature = serializer.create(serializer.validated_data)
+        response_serializer = FeatureSerializer(feature)
+        return Response({"message" : "Feature added Successfully", "data" : response_serializer.data}, status = status.HTTP_201_CREATED)
+    return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
+
+
     
+
 
     
 

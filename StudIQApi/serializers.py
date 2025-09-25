@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import CustomUser, OTPTable, Service
+from .models import CustomUser, OTPTable, Service, Feature
 import re
 import random
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -247,6 +247,23 @@ class ServiceSerializer(serializers.Serializer):
         instance.title = validated_data.get("title", instance.title)
         instance.save()
         return instance
+    
+class FeatureSerializer(serializers.Serializer):
+    feature_id = serializers.IntegerField(read_only=True)
+    service = serializers.PrimaryKeyRelatedField(queryset=Service.objects.all())
+    feature_name = serializers.CharField(max_length=255)
+    created_at = serializers.DateTimeField(read_only=True)
+    updated_at = serializers.DateTimeField(read_only=True)
+
+    def create(self, validated_data):
+        return Feature.objects.create(**validated_data)
+
+    def update(self, instance, validated_data):
+        instance.service = validated_data.get("service", instance.service)
+        instance.feature_name = validated_data.get("feature_name", instance.feature_name)
+        instance.save()
+        return instance
+    
 
 
 
