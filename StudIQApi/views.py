@@ -249,3 +249,9 @@ def update_feature(request, feature_id):
         response_serializer = FeatureSerializer(updated_feature)
         return Response({"message" : "Feature Updated Successfully", "data" : response_serializer.data}, status = status.HTTP_200_OK)
     return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
+
+@api_view(["GET"])
+def get_all_services_with_features(request):
+    services = Service.objects.all()
+    serializer = ServiceSerializer(services, many = True)
+    return Response({"services" : serializer.data}, status = status.HTTP_200_OK)

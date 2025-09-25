@@ -232,22 +232,6 @@ class CurrentUserSerializer(serializers.Serializer):
         return instance
     
 
-class ServiceSerializer(serializers.Serializer):
-    service_id = serializers.IntegerField(read_only=True)   # Auto PK
-    service_name = serializers.CharField(max_length=100)
-    title = serializers.CharField(max_length=255)
-    created_at = serializers.DateTimeField(read_only=True)
-    updated_at = serializers.DateTimeField(read_only=True)
-
-    def create(self, validated_data):
-        return Service.objects.create(**validated_data)
-
-    def update(self, instance, validated_data):
-        instance.service_name = validated_data.get("service_name", instance.service_name)
-        instance.title = validated_data.get("title", instance.title)
-        instance.save()
-        return instance
-    
 class FeatureSerializer(serializers.Serializer):
     feature_id = serializers.IntegerField(read_only=True)
     service = serializers.PrimaryKeyRelatedField(queryset=Service.objects.all())
@@ -263,7 +247,25 @@ class FeatureSerializer(serializers.Serializer):
         instance.feature_name = validated_data.get("feature_name", instance.feature_name)
         instance.save()
         return instance
-    
+
+
+class ServiceSerializer(serializers.Serializer):
+    service_id = serializers.IntegerField(read_only=True)
+    service_name = serializers.CharField(max_length=100)
+    title = serializers.CharField(max_length=255)
+    created_at = serializers.DateTimeField(read_only=True)
+    updated_at = serializers.DateTimeField(read_only=True)
+
+    features = FeatureSerializer(many=True, read_only=True)
+
+    def create(self, validated_data):
+        return Service.objects.create(**validated_data)
+
+    def update(self, instance, validated_data):
+        instance.service_name = validated_data.get("service_name", instance.service_name)
+        instance.title = validated_data.get("title", instance.title)
+        instance.save()
+        return instance
 
 
 
