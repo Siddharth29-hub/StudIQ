@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 from datetime import timedelta
+import cloudinary
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -79,8 +80,19 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework_simplejwt',
-    'StudIQApi'
+    'cloudinary',
+    'cloudinary_storage',
+    'StudIQApi',
 ]
+
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': 'debqsopvc',
+    'API_KEY': '192663245136524',
+    'API_SECRET': 'e4hiV0YRm__j-ighpAN1_5T3VYU',
+}
+
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
