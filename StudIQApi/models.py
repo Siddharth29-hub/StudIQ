@@ -162,6 +162,40 @@ class HostelRoom(models.Model):
 
     def __str__(self):
         return f"{self.hostel.name} - Room {self.room_no}"
+    
+
+class HostelFacility(models.Model):
+    id = models.AutoField(primary_key = True)
+    hostel = models.OneToOneField(Hostel, on_delete = models.CASCADE, related_name = 'facility')
+    power_backup = models.BooleanField(default = False)
+    cctv = models.BooleanField(default = False)
+    warden = models.BooleanField(default = False)
+    visitors = models.BooleanField(default = False)
+    tv_lounge = models.BooleanField(default = False)
+    gym_access = models.BooleanField(default = False)
+    ro_water = models.BooleanField(default = False)
+    fire_safety = models.BooleanField(default = False)
+    washing_machine = models.BooleanField(default = False)
+    wifi = models.BooleanField(default = False)
+    geyser = models.BooleanField(default = False)
+    parking = models.BooleanField(default = False)
+    open_terrace = models.BooleanField(default = False)
+
+    def __str__(self):
+        return f"{self.hostel.name} Facilities"
+    
+class HostelPhoto(models.Model):
+    id = models.AutoField(primary_key = True)
+    hostel = models.ForeignKey(Hostel, on_delete = models.CASCADE, related_name = 'photos')
+    file = CloudinaryField(resource_type = 'auto')
+    is_banner = models.BooleanField(default = False)
+
+    def __str__(self):
+        return f"{self.hostel.name} Photo"
+    
+
+    
+
 
 
     
