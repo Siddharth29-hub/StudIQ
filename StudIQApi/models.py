@@ -121,6 +121,47 @@ class Hostel(models.Model):
 
     def __str__(self):
         return self.name
+    
+class HostelRoom(models.Model):
+    ROOM_TYPE_CHOICES = [
+        ('Single', 'Single'),
+        ('Double', 'Double'),
+        ('Triple', 'Triple'),
+
+    ]
+
+    AC_TYPE_CHOICES = [
+        ('AC', 'AC'),
+        ('Non-AC', 'Non-AC'),
+    ]
+
+    FURNISHED_CHOICES = [
+        ('Furnished', 'Furnished'),
+        ('Semi-Furnished', 'Semi-Furnished'),
+        ('Unfurnished', 'Unfurnished'),
+    ]
+
+    BED_TYPE_CHOICES = [
+        ('Single Bed','Single Bed'),
+        ('Bunk Bed', 'Bunk Bed'),
+        ('Double Bed', 'Double Bed'),
+    ]
+
+    id = models.AutoField(primary_key = True)
+    hostel = models.ForeignKey(Hostel, on_delete = models.CASCADE, related_name = 'rooms')
+    room_no = models.CharField(max_length = 20)
+    room_type = models.CharField(max_length = 20, choices = ROOM_TYPE_CHOICES)
+    floor_no = models.IntegerField()
+    ac_type = models.CharField(max_length = 10, choices = AC_TYPE_CHOICES)
+    furnished_status = models.CharField(max_length = 20, choices = FURNISHED_CHOICES)
+    bed_type = models.CharField(max_length = 20, choices = BED_TYPE_CHOICES)
+    price_per_month = models.DecimalField(max_digits = 10, decimal_places = 2)
+    availability = models.BooleanField(default = True)
+    capacity = models.IntegerField(default = 1)
+    old_user_counts = models.IntegerField(default = 0)
+
+    def __str__(self):
+        return f"{self.hostel.name} - Room {self.room_no}"
 
 
     
