@@ -85,14 +85,14 @@ INSTALLED_APPS = [
     'StudIQApi',
 ]
 
-CLOUDINARY_STORAGE = {
-    'CLOUD_NAME': 'debqsopvc',
-    'API_KEY': '192663245136524',
-    'API_SECRET': 'e4hiV0YRm__j-ighpAN1_5T3VYU',
-}
 
-DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
-
+cloudinary.config(
+  cloud_name = "debqsopvc",
+  api_key = "192663245136524",
+  api_secret = "e4hiV0YRm__j-ighpAN1_5T3VYU",
+  secure = True
+)
+DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

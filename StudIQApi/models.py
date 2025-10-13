@@ -35,7 +35,7 @@ class CustomUser(models.Model):
     bio = models.TextField(blank = True, null = True)
     interests = models.TextField(blank = True, null = True)
     skills = models.TextField(blank = True, null = True)
-    profile_photo = models.ImageField(upload_to = "profile_photo/", blank = True, null = True)
+    profile_photo = CloudinaryField('image', folder = 'profile_photo', blank = True, null = True)
 
     
 
@@ -89,6 +89,9 @@ class Hostel(models.Model):
         ("Luxury", "Luxury"),
         ("Standard", "Standard"),
     ]
+
+    user = models.ForeignKey(CustomUser, on_delete = models.CASCADE, related_name = 'hostels')
+    
 
     id = models.AutoField(primary_key = True)
     name = models.CharField(max_length = 255)
@@ -159,6 +162,8 @@ class HostelRoom(models.Model):
     availability = models.BooleanField(default = True)
     capacity = models.IntegerField(default = 1)
     old_user_counts = models.IntegerField(default = 0)
+    created_at = models.DateTimeField(auto_now_add = True)
+    updated_at = models.DateTimeField(auto_now = True)
 
     def __str__(self):
         return f"{self.hostel.name} - Room {self.room_no}"
@@ -180,6 +185,8 @@ class HostelFacility(models.Model):
     geyser = models.BooleanField(default = False)
     parking = models.BooleanField(default = False)
     open_terrace = models.BooleanField(default = False)
+    created_at = models.DateTimeField(auto_now_add = True)
+    updated_at = models.DateTimeField(auto_now = True)
 
     def __str__(self):
         return f"{self.hostel.name} Facilities"
@@ -189,9 +196,17 @@ class HostelPhoto(models.Model):
     hostel = models.ForeignKey(Hostel, on_delete = models.CASCADE, related_name = 'photos')
     file = CloudinaryField(resource_type = 'auto')
     is_banner = models.BooleanField(default = False)
+    created_at = models.DateTimeField(auto_now_add = True)
+    updated_at = models.DateTimeField(auto_now = True)
 
     def __str__(self):
         return f"{self.hostel.name} Photo"
+    
+
+    
+
+
+
     
 
     
