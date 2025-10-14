@@ -7,6 +7,7 @@ from .views import (
     feature_list,add_feature,feature_detail,update_feature,delete_feature,get_all_services_with_features,
     create_hostel, update_hostel_by_id, get_all_hostels, delete_hostel_by_id, approve_or_reject_hostel,
     change_status_by_id, get_hostel_by_id, get_all_approved_hostels, upload_hostel_image, upload_hostel_video,
+    get_owner_hostels, get_owner_hostel_byid
 )
 
 urlpatterns = [
@@ -14,7 +15,7 @@ urlpatterns = [
     path("verify_otp/",verify_otp, name = "verify_otp" ),
     path("login/", login, name = "login"),
     path("verify_login_otp/", verify_login_otp, name = "verify_login_otp"),
-    path("complete_profile/", complete_profile, name = "complete_profile"),
+    path("complete_profile/", complete_profile, name = "complete_profile"), # (GET, PUT)
     
     # New endpoints for user management
     path("users/", get_all_users, name = "get_all_users"), # GET(ADMIN)
@@ -50,5 +51,11 @@ urlpatterns = [
     # -------------------- Hostel Media Upload --------------------
     path('upload-image/<int:hostel_id>/', upload_hostel_image, name='upload_hostel_image'), # POST (owner)
     path('upload-video/<int:hostel_id>/', upload_hostel_video, name='upload_hostel_video'), # POST (owner)
+    path('get-owner-hostels/', get_owner_hostels , name = "get_owner_hostels"), #GET (OWNER)
+    path("get-owner-hostel-byid/<int:hostel_id>/", get_owner_hostel_byid, name = 'get_owner_hostels-byid') # GET(OWNER)
+    
 
 ]
+
+
+
