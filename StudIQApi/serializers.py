@@ -1,9 +1,8 @@
 from rest_framework import serializers
-from .models import CustomUser, OTPTable, Service, Feature, Hostel, HostelPhoto
+from .models import CustomUser, OTPTable , Service, Feature,Hostel,HostelPhoto
 import re
 import random
 from rest_framework_simplejwt.tokens import RefreshToken
-# from .models import Feature, Service
 
 
 class SignupSerializer(serializers.Serializer):
@@ -11,11 +10,13 @@ class SignupSerializer(serializers.Serializer):
     email = serializers.EmailField()
     mobile = serializers.CharField(max_length=15)
     role = serializers.ChoiceField(choices=['user', 'owner', 'admin', 'agent'])
+
     def validate_mobile(self, value):
         pattern = r'^[6-9]\d{9}$'
         if not re.match(pattern, value):
             raise serializers.ValidationError("Enter a valid Indian mobile number")
         return value
+
     def validate(self, data):
         """
         Check if username, email, or mobile already exist.
@@ -23,6 +24,7 @@ class SignupSerializer(serializers.Serializer):
         username = data.get('username')
         email = data.get('email')
         mobile = data.get('mobile')
+
         errors = {}
         if CustomUser.objects.filter(username=username).exists():
             errors['username'] = "This username is already taken."
@@ -30,9 +32,12 @@ class SignupSerializer(serializers.Serializer):
             errors['email'] = "This email is already registered."
         if CustomUser.objects.filter(mobile=mobile).exists():
             errors['mobile'] = "This mobile number is already registered."
+
         if errors:
             raise serializers.ValidationError(errors)
+
         return data
+
     def create(self, validated_data):
         otp = "123456"  # You can replace with random OTP generation
         user = CustomUser.objects.create(
@@ -43,6 +48,7 @@ class SignupSerializer(serializers.Serializer):
         )
         print("Generated OTP:", otp)
         return user, otp
+    
 
 class VerifyOtpSerializer(serializers.Serializer):
     mobile = serializers.CharField()
@@ -108,14 +114,13 @@ class VerifyLoginOtpSerializer(serializers.Serializer):
 
         except CustomUser.DoesNotExist:
             raise serializers.ValidationError("User Not found")
-        
-        
     
 class CompleteProfileSerializer(serializers.Serializer):
     id = serializers.IntegerField(read_only = True)
     username = serializers.CharField(max_length = 100, required = False)
     email = serializers.EmailField(required = False)
     role = serializers.CharField(max_length = 10, required = False)
+
     age = serializers.IntegerField(required = False, allow_null = True)
     dob = serializers.DateField(required = False, allow_null = True)
     father_name = serializers.CharField(max_length = 100, required = False, allow_blank = True)
@@ -130,6 +135,7 @@ class CompleteProfileSerializer(serializers.Serializer):
     interests = serializers.CharField(required = False, allow_blank = True)
     skills = serializers.CharField(required = False, allow_blank = True)
     profile_photo = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+
     def validate_profile_photo(self, value):
         """
         Accepts both string URLs or image file (base64 or path).
@@ -141,22 +147,25 @@ class CompleteProfileSerializer(serializers.Serializer):
             # If it's a file object (e.g., uploaded image)
             return value
         return None
+
     def update(self, instance, validated_data):
         """
         Update existing user profile.
         Handles both image file and string URLs for profile_photo.
         """
         profile_photo = validated_data.pop('profile_photo', None)
+
         for key, value in validated_data.items():
             setattr(instance, key, value)
+
         if profile_photo:
             instance.profile_photo = profile_photo  # can be URL string or image
+
         instance.save()
         return instance
+
     def create(self, validated_data):
         return CustomUser.objects.create(**validated_data)
-
-
 
 class UserListSerializer(serializers.Serializer):
     id = serializers.IntegerField(read_only = True)
@@ -185,9 +194,6 @@ class UserListSerializer(serializers.Serializer):
         instance.city = validated_data.get("city", instance.city)
         instance.save()
         return instance
-
-
-
 
 class CurrentUserSerializer(serializers.Serializer):
     """
@@ -256,7 +262,6 @@ class CurrentUserSerializer(serializers.Serializer):
         instance.save()
         return instance
     
-
 class FeatureSerializer(serializers.Serializer):
     feature_id = serializers.IntegerField(read_only=True)
     service = serializers.PrimaryKeyRelatedField(queryset=Service.objects.all())
@@ -272,7 +277,6 @@ class FeatureSerializer(serializers.Serializer):
         instance.feature_name = validated_data.get("feature_name", instance.feature_name)
         instance.save()
         return instance
-
 
 class ServiceSerializer(serializers.Serializer):
     service_id = serializers.IntegerField(read_only=True)
@@ -291,73 +295,39 @@ class ServiceSerializer(serializers.Serializer):
         instance.title = validated_data.get("title", instance.title)
         instance.save()
         return instance
-    
+
 class HostelSerializer(serializers.ModelSerializer):
     user = serializers.SerializerMethodField()
+
     class Meta:
         model = Hostel
-        fields = '__all__'
+        fields = "__all__"
 
     def get_user(self, obj):
         """Return username + id together as 'username (id)'."""
         if obj.user:
             return f"{obj.user.username} (ID: {obj.user.id})"
-        return None
-
+        return None    
 
     def validate_contact_no(self, value):
-
-        value = value.strip().replace(" ", "") #clean space if any
-
+        value = value.strip().replace(" ", "")
         if not value.isdigit() or len(value) < 10:
-            raise serializers.ValidationError("Contact Number must be at least 10 digits or numeric")
+            raise serializers.ValidationError("Contact number must be at least 10 digits.")
         return value
-    
 
     def validate_pincode(self, value):
-        value = value.strip().replace(" ", "") # clean space if any
-
+        value = value.strip().replace(" ", "")
         if not value.isdigit() or len(value) != 6:
-            raise serializers.ValidationError("Pincode must be exactly 6 digits or numeric")
+            raise serializers.ValidationError("Pincode must be exactly 6 digits.")
         return value
-    
-class HostelPhotoSerializer(serializers.ModelSerializer):
+
+class HostelPhotoSerializer(serializers.ModelSerializer): 
     class Meta:
-        model = HostelPhoto
-        fields = ['id', 'hostel', 'file', 'is_banner', 'created_at', 'updated_at']
-
-    def validate(self, data):
+        model = HostelPhoto 
+        fields = ['id', 'hostel', 'file', 'is_banner', 'created_at', 'updated_at'] 
+    
+    def validate(self, data): 
         file = data.get('file')
-        if not file:
-            raise serializers.ValidationError("File is required for upload")
+        if not file: 
+            raise serializers.ValidationError("File is required for upload.") 
         return data
-    
-    
-    
-    
-
-    
-
-    
-
-
-
-
-    
-    
-        
-        
-
-
-    
-
-
-
-
-        
-
-    
-    
-
-
-

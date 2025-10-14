@@ -29,6 +29,7 @@ def admin_required(view_func):
     return _wrapped_view
 
 
+
 @api_view(['POST'])
 @permission_classes([AllowAny])
 @csrf_exempt
@@ -53,6 +54,8 @@ def signup(request):
         "status": "error",
         "errors": serializer.errors
     }, status=status.HTTP_400_BAD_REQUEST)
+
+
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -95,6 +98,8 @@ def set_tokens_as_cookies(response, user):
     return response
 
 
+
+
 @api_view(['POST'])
 @permission_classes([AllowAny])
 @csrf_exempt
@@ -114,6 +119,8 @@ def login(request):
     
     return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
 
+
+
 @api_view(['POST'])
 @permission_classes([AllowAny])
 @csrf_exempt
@@ -125,6 +132,8 @@ def verify_login_otp(request):
         return set_tokens_as_cookies(response, user)
     
     return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
+
+
     
 @api_view(['GET', 'PUT'])
 @RoleBasedAuthorizationMiddleware.require_authentication
@@ -172,6 +181,8 @@ def complete_profile(request):
             "status": "error",
             "errors": serializer.errors
         }, status=status.HTTP_400_BAD_REQUEST)
+    
+
 
 @api_view(['GET'])
 @RoleBasedAuthorizationMiddleware.require_authentication
@@ -211,6 +222,7 @@ def get_all_users(request):
     }, status=status.HTTP_200_OK)
 
 
+
 @api_view(['GET'])
 @RoleBasedAuthorizationMiddleware.require_authentication
 def get_current_user(request):
@@ -227,6 +239,7 @@ def get_current_user(request):
         'message': 'Current user information retrieved successfully',
         'user': serializer.data
     }, status=status.HTTP_200_OK)
+
 
 
 @api_view(['POST'])
