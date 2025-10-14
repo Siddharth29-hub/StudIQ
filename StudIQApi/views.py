@@ -126,29 +126,37 @@ def complete_profile(request):
     - PUT: Update own profile (from access token)
     """
     user = getattr(request, 'user', None)
-
     if not user or not getattr(user, 'is_authenticated', False):
         return Response(
             {"error": "Authentication required"},
             status=status.HTTP_401_UNAUTHORIZED
         )
-
     if request.method == "GET":
         serializer = CompleteProfileSerializer(user)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
+        return Response({
+            "status": "success",
+            "message": "Profile details fetched successfully",
+            "data": serializer.data
+        }, status=status.HTTP_200_OK)
+   # -------------------- UPDATE PROFILE --------------------
     elif request.method == "PUT":
-        serializer = CompleteProfileSerializer(user, data=request.data, partial=True)
+        data = request.data.copy()
+        # :white_check_mark: Allow string URL for profile_photo
+        profile_photo = data.get('profile_photo')
+        if profile_photo and isinstance(profile_photo, str):
+            user.profile_photo = profile_photo  # Directly assign string (URL/Base64)
+        serializer = CompleteProfileSerializer(user, data=data, partial=True)
         if serializer.is_valid():
             serializer.save()
-            return Response(
-                {
-                    "message": "Profile updated successfully",
-                    "profile": serializer.data
-                },
-                status=status.HTTP_200_OK
-            )
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response({
+                "status": "success",
+                "message": "Profile updated successfully",
+                "data": serializer.data
+            }, status=status.HTTP_200_OK)
+        return Response({
+            "status": "error",
+            "errors": serializer.errors
+        }, status=status.HTTP_400_BAD_REQUEST)
 
 
 
@@ -206,28 +214,7 @@ def get_current_user(request):
     }, status=status.HTTP_200_OK)
 
 
-@api_view(['PUT'])
-@RoleBasedAuthorizationMiddleware.require_authentication
-def update_current_user(request):
-    """
-    API to update current user's information
-    """
-    user = getattr(request, 'user', None)
-    if not user or not getattr(user, 'is_authenticated', False):
-        return Response({'error': 'Authentication required'}, status=status.HTTP_401_UNAUTHORIZED)
-    serializer = CurrentUserSerializer(user, data=request.data, partial=True)
-    
-    if serializer.is_valid():
-        serializer.save()
-        return Response({
-            'message': 'User information updated successfully',
-            'user': serializer.data
-        }, status=status.HTTP_200_OK)
-    
-    return Response({
-        'error': 'Validation failed',
-        'details': serializer.errors
-    }, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 @api_view(['POST'])
@@ -490,36 +477,39 @@ def change_status_by_id(request, hostel_id):
 
 
 @api_view(['GET'])
-@RoleBasedAuthorizationMiddleware.require_authentication
 def get_hostel_by_id(request, hostel_id):
     """
-    API for all roles (admin, owner, user) to view hostel details.
+    Public API to view a single hostel's details by ID.
+    Accessible by anyone (no authentication required).
     """
-
     try:
-        hostel = Hostel.objects.get(id = hostel_id)
+        hostel = Hostel.objects.get(id=hostel_id)
     except Hostel.DoesNotExist:
-        return Response({"Error" : "Hostel not found"}, status = status.HTTP_404_NOT_FOUND)
-    
+        return Response(
+            {"status": "error", "error": "Hostel not found"},
+            status=status.HTTP_404_NOT_FOUND
+        )
     serializer = HostelSerializer(hostel)
     return Response({
-        "message" : "Hostel details fetched successfully",
-        "data" : serializer.data
-    }, status = status.HTTP_200_OK)
+        "status": "success",
+        "message": "Hostel details fetched successfully",
+        "data": serializer.data
+    }, status=status.HTTP_200_OK)
 
 @api_view(['GET'])
-@RoleBasedAuthorizationMiddleware.require_authentication
 def get_all_approved_hostels(request):
     """
-    API for all roles to get list of approved hostels.
+    Public API to get a list of all approved and active hostels.
+    Accessible by anyone (no authentication required).
     """
-    hostels = Hostel.objects.filter(is_approved = True, is_active = True).order_by('-created_at')
-    serializer = HostelSerializer(hostels, many = True)
+    hostels = Hostel.objects.filter(is_approved=True, is_active=True).order_by('-created_at')
+    serializer = HostelSerializer(hostels, many=True)
     return Response({
-        "message" : "Approved Hostels Fetched successfully",
-        "total" : hostels.count(),
-        "data" : serializer.data
-    }, status = status.HTTP_200_OK)
+        "status": "success",
+        "message": "Approved hostels fetched successfully",
+        "total": hostels.count(),
+        "data": serializer.data
+    }, status=status.HTTP_200_OK)
 
 @api_view(['POST'])
 @RoleBasedAuthorizationMiddleware.required_roles(['owner'])
